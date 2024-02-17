@@ -4,44 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4ca83f96-ae3d-435f-b943-93df6023d251" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/kotlinc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.run/desktop.run.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gradle.properties" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.jar" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gradlew" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gradlew.bat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/settings.gradle.kts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/Main.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/api/ChessGame.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/api/Movement.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/composables/ChessBoardComposables.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/composables/ConsoleComposables.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/composables/InGameMenuComposables.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/composables/MainMenuComposables.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/models/ChessBoardViewModel.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/models/ConsoleViewModel.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/black_bishop.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/black_king.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/black_knight.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/black_pawn.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/black_queen.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/black_rook.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/complete_set.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/white_bishop.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/white_king.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/white_knight.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/white_pawn.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/white_queen.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/white_rook.png" afterDir="false" />
+    <list default="true" id="4ca83f96-ae3d-435f-b943-93df6023d251" name="Changes" comment="Initial commit">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/Main.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Main.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/api/ChessGame.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/api/ChessGame.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/api/Movement.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/api/Movement.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -138,7 +106,7 @@
       <recent name="api" />
     </key>
   </component>
-  <component name="RunManager" selected="Gradle.zenith-chess [build]">
+  <component name="RunManager" selected="Kotlin.MainKt">
     <configuration name="zenith-chess [build]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -183,8 +151,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Gradle.zenith-chess [build]" />
         <item itemvalue="Kotlin.MainKt" />
+        <item itemvalue="Gradle.zenith-chess [build]" />
       </list>
     </recent_temporary>
   </component>
@@ -197,6 +165,19 @@
       <option name="presentableId" value="Default" />
       <updated>1707751526559</updated>
     </task>
+    <task id="LOCAL-00001" summary="Initial commit">
+      <option name="closed" value="true" />
+      <created>1708181758422</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1708181758422</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Initial commit" />
+    <option name="LAST_COMMIT_MESSAGE" value="Initial commit" />
   </component>
 </project>
