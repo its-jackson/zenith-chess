@@ -15,12 +15,11 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
+import api.GameDetails
 import composables.ChessBoard
 import composables.ConsoleOverlay
 import models.ChessBoardViewModel
 import models.ConsoleViewModel
-
-const val GAME_NAME = "Zenith Chess"
 
 private val CustomColors = darkColors(
     primary = Color.Black,
@@ -93,7 +92,7 @@ fun main() = application {
     val chessBoardViewModel = ChessBoardViewModel()
 
     Window(
-        title = GAME_NAME,
+        title = GameDetails.title,
         state = WindowState(position = WindowPosition(Alignment.Center)),
         onCloseRequest = ::exitApplication,
         onPreviewKeyEvent = { keyEvent -> openConsoleTrigger(keyEvent, consoleViewModel) }

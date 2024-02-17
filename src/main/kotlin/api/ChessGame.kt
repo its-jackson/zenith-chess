@@ -32,7 +32,7 @@ enum class ChessState {
     Resignation // One of the players has resigned, ending the game.
 }
 
-enum class Direction(val dx: Int, val dy: Int) {
+enum class ChessDirection(val dx: Int, val dy: Int) {
     Up(0, 1),
     Down(0, -1),
     Left(-1, 0),
@@ -44,7 +44,7 @@ enum class Direction(val dx: Int, val dy: Int) {
     BottomLeft(-1, -1);
 
     companion object {
-        fun fromCoordinates(from: Coordinate, to: Coordinate): Direction? {
+        fun fromCoordinates(from: Coordinate, to: Coordinate): ChessDirection? {
             val dx = to.x - from.x
             val dy = to.y - from.y
             return entries.find { it.dx == dx && it.dy == dy }
@@ -66,8 +66,8 @@ class ChessBoard {
 
     private fun setupAsWhiteSide() {
         (0 until SIZE).forEach { i ->
-            this[6, i] = Pawn(ChessColour.White)
-            this[1, i] = Pawn(ChessColour.Black)
+            this[6, i] = Pawn(ChessColour.White, Movement.Direction.Down)
+            this[1, i] = Pawn(ChessColour.Black, Movement.Direction.Up)
         }
 
         listOf(0, 7).forEach { i ->
@@ -94,8 +94,8 @@ class ChessBoard {
 
     private fun setupAsBlackSide() {
         (0 until SIZE).forEach { i ->
-            this[1, i] = Pawn(ChessColour.White)
-            this[6, i] = Pawn(ChessColour.Black)
+            this[1, i] = Pawn(ChessColour.White, Movement.Direction.Up)
+            this[6, i] = Pawn(ChessColour.Black, Movement.Direction.Down)
         }
 
         listOf(0, 7).forEach { i ->
@@ -173,7 +173,7 @@ fun ChessBoard.movesForBishopAndRook(
         var currentX = position.x + dx
         var currentY = position.y + dy
 
-        // Traverse diagonally in each direction
+        // Traverse in each direction
         while (currentX in 0 until SIZE && currentY in 0 until SIZE) {
             val nextPosition = Coordinate(currentX, currentY)
             val pieceAtNextPosition = this[currentX, currentY]
@@ -238,17 +238,20 @@ abstract class ChessPiece(
     ): List<Coordinate>
 }
 
-class Pawn(colour: ChessColour) : ChessPiece(
+class Pawn(
+    colour: ChessColour,
+    direction: Movement.Direction
+) : ChessPiece(
     colour,
     if (colour == ChessColour.White) "white_pawn.png" else "black_pawn.png"
 ) {
-    private val direction = if (colour == ChessColour.White) 1 else -1
+    private val step = direction.step
 
     private fun forwardMove(
         chessBoard: ChessBoard,
         from: Coordinate,
         to: Coordinate
-    ) = from.x + direction == to.x
+    ) = from.x + step == to.x
             && from.y == to.y
             && chessBoard[to.x, to.y] == null
 
@@ -257,15 +260,15 @@ class Pawn(colour: ChessColour) : ChessPiece(
         from: Coordinate,
         to: Coordinate,
     ) = !hasMoved
-            && from.x + 2 * direction == to.x
+            && from.x + 2 * step == to.x
             && from.y == to.y && chessBoard[to.x, to.y] == null
-            && chessBoard[from.x + direction, from.y] == null
+            && chessBoard[from.x + step, from.y] == null
 
     private fun captureMove(
         chessBoard: ChessBoard,
         from: Coordinate,
         to: Coordinate
-    ) = from.x + direction == to.x
+    ) = from.x + step == to.x
             && (from.y + 1 == to.y || from.y - 1 == to.y)
             && chessBoard[to.x, to.y] != null
             && chessBoard[to.x, to.y]?.colour != this.colour
@@ -303,20 +306,20 @@ class Pawn(colour: ChessColour) : ChessPiece(
         // val promotionRow
 
         // Standard move
-        if (chessBoard[x + direction, y] == null) {
-            possibleMoves.add((Coordinate(x + direction, y)))
+        if (chessBoard[x + step, y] == null) {
+            possibleMoves.add((Coordinate(x + step, y)))
             // Double move from start position
-            if (!hasMoved && chessBoard[x + 2 * direction, y] == null) {
-                possibleMoves.add(Coordinate(x + 2 * direction, y))
+            if (!hasMoved && chessBoard[x + 2 * step, y] == null) {
+                possibleMoves.add(Coordinate(x + 2 * step, y))
             }
         }
 
         // Capturing moves
         listOf(-1, 1).forEach { dy ->
             if (y + dy in 0..< SIZE) { // Ensure within board bounds
-                val target = chessBoard[x + direction, y + dy]
+                val target = chessBoard[x + step, y + dy]
                 if (target != null && target.colour != this.colour) {
-                    possibleMoves.add(Coordinate(x + direction, y + dy))
+                    possibleMoves.add(Coordinate(x + step, y + dy))
                 }
                 // Check for en passant conditions here, adding to possibleMoves if valid
             }
@@ -337,8 +340,8 @@ class Rook(colour: ChessColour) : ChessPiece(
     if (colour == ChessColour.White) "white_rook.png" else "black_rook.png"
 ) {
     private val directions = listOf(
-        Direction.Up, Direction.Down,
-        Direction.Left, Direction.Right
+        ChessDirection.Up, ChessDirection.Down,
+        ChessDirection.Left, ChessDirection.Right
     ).map { Coordinate(it.dx, it.dy) }
 
     override fun isMoveLegal(
@@ -400,10 +403,10 @@ class Bishop(colour: ChessColour) : ChessPiece(
     if (colour == ChessColour.White) "white_bishop.png" else "black_bishop.png"
 ) {
     private val directions = listOf(
-        Direction.TopRight,
-        Direction.TopLeft,
-        Direction.BottomRight,
-        Direction.BottomLeft
+        ChessDirection.TopRight,
+        ChessDirection.TopLeft,
+        ChessDirection.BottomRight,
+        ChessDirection.BottomLeft
     ).map { Coordinate(it.dx, it.dy) }
 
     override fun isMoveLegal(
@@ -427,8 +430,8 @@ class Queen(colour: ChessColour) : ChessPiece(
     if (colour == ChessColour.White) "white_queen.png" else "black_queen.png"
 ) {
     private val directions = listOf(
-        Direction.Up, Direction.Down, Direction.Left, Direction.Right,
-        Direction.TopRight, Direction.TopLeft, Direction.BottomRight, Direction.BottomLeft
+        ChessDirection.Up, ChessDirection.Down, ChessDirection.Left, ChessDirection.Right,
+        ChessDirection.TopRight, ChessDirection.TopLeft, ChessDirection.BottomRight, ChessDirection.BottomLeft
     ).map { Coordinate(it.dx, it.dy) }
 
     override fun isMoveLegal(

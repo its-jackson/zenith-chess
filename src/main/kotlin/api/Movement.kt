@@ -4,6 +4,11 @@ import kotlin.math.abs
 import kotlin.math.max
 
 object Movement {
+    sealed class Direction(val step: Int) {
+        data object Up : Direction(1)
+        data object Down : Direction(-1)
+        data object None : Direction(0)
+    }
 
     /**
      * Chebyshev distance
@@ -42,15 +47,15 @@ object Movement {
         val (dx, dy) = calculateDirectionalDifferences(from, to)
 
         val xStep = when {
-            dx > 0 -> 1
-            dx < 0 -> -1
-            else -> 0 // No horizontal movement
+            dx > 0 -> Direction.Up.step
+            dx < 0 -> Direction.Down.step
+            else -> Direction.None.step
         }
 
         val yStep = when {
-            dy > 0 -> 1
-            dy < 0 -> -1
-            else -> 0 // No vertical movement
+            dy > 0 -> Direction.Up.step
+            dy < 0 -> Direction.Down.step
+            else -> Direction.None.step
         }
 
         return Pair(xStep, yStep)
