@@ -1,9 +1,6 @@
 package api
 
-import api.Movement.calculateAbsoluteDifferences
 import api.Movement.getMovementStep
-import api.Movement.isDiagonalMovement
-import api.Movement.isStraightMovement
 
 const val SIZE = 8
 
@@ -19,6 +16,8 @@ fun Coordinate.distance(to: Coordinate) = Movement.distance(
 enum class ChessColour {
     White, Black
 }
+
+fun ChessColour.opposite() = if (this == ChessColour.White) ChessColour.Black else ChessColour.White
 
 enum class ChessState {
     Ongoing, // The game is ongoing, and no special condition is met.
@@ -52,16 +51,18 @@ enum class ChessDirection(val dx: Int, val dy: Int) {
     }
 }
 
-class ChessBoard {
-    private val board: Array<Array<ChessPiece?>> = Array(SIZE) {
-        Array(SIZE) { null }
-    }
-
-    private var state = ChessState.Ongoing
-    private var turnsPlayed = 1
+class ChessBoard(
+    val humanPlayerColour: ChessColour,
+    var state: ChessState = ChessState.Ongoing,
+    var turnsPlayed: Int = 1,
+    private val board: Array<Array<ChessPiece?>> = Array(SIZE) { Array(SIZE) { null } }
+) {
+    val aiPlayerColour get() = humanPlayerColour.opposite()
 
     init {
-        setupAsWhiteSide()
+        if (humanPlayerColour == ChessColour.White) {
+            setupAsWhiteSide()
+        } else setupAsBlackSide()
     }
 
     private fun setupAsWhiteSide() {
@@ -129,20 +130,173 @@ class ChessBoard {
     ) {
         board[x][y] = piece
     }
+}
 
-    fun deepCopy(): ChessBoard {
-        val copy = ChessBoard()
-        for (x in board.indices) {
-            for (y in board[x].indices) {
-                copy[x, y] = board[x][y]
-            }
+fun ChessBoard.deepCopy(): ChessBoard {
+    val copy = ChessBoard(
+        humanPlayerColour = this.humanPlayerColour,
+        state = this.state,
+        turnsPlayed = this.turnsPlayed
+    )
+
+    (0 until SIZE).forEach { x ->
+        (0 until SIZE).forEach { y ->
+            copy[x, y] = this[x, y] // Not entirely confident if the ChessPiece should be deep copied too
         }
-        return copy
+    }
+
+    return copy
+}
+
+fun ChessBoard.isGameOver() = state == ChessState.Checkmate
+        || state == ChessState.Stalemate
+        || state == ChessState.DrawByRepetition
+        || state == ChessState.DrawByInsufficientMaterial
+        || state == ChessState.DrawByFiftyMoveRule
+        || state == ChessState.DrawByAgreement
+        || state == ChessState.Resignation
+
+/**
+ * A player is in check if their king is in under attack and has a legal move to remove the threat.
+ */
+fun ChessBoard.isCheck(colour: ChessColour): Boolean {
+    val kingPosition = findPieceCoordinate<King>(colour) ?: return false
+    return isUnderAttack(kingPosition, colour)
+}
+
+/**
+ * A player is in checkmate if their king is in check and
+ * there are no legal moves available to remove the king from attack.
+ */
+fun ChessBoard.isCheckmate(colour: ChessColour): Boolean {
+    if (!isCheck(colour)) return false
+
+    // Iterate over all pieces of the current player to find any legal move that would remove the check
+    val pieces = getPiecesByColour(colour)
+    for ((piece, position) in pieces) {
+        val possibleMoves = piece.possibleMoves(this, position)
+        for (move in possibleMoves) {
+            // Make a new chess board and simulate the possible move for the piece
+            val testBoard = this.deepCopy().apply {
+                this[move.x, move.y] = piece
+                this[position.x, position.y] = null
+                piece.markAsMoved()
+            }
+            // If, after the move, the king is not in check, it's not checkmate
+            if (!testBoard.isCheck(colour)) return false
+        }
+    }
+
+    return true
+}
+
+/**
+ * A stalemate occurs when the player to move is not in check but has no legal moves.
+ */
+fun ChessBoard.isStalemate(colour: ChessColour): Boolean {
+    if (isCheck(colour)) return false
+
+    // Check if there are no legal moves for any piece
+    val playerPieces = getPiecesByColour(colour)
+    return playerPieces.all { (_, position) ->
+        val pieceMoves = this[position.x, position.y]?.possibleMoves(this, position) ?: emptyList()
+        pieceMoves.isEmpty()
     }
 }
 
-fun ChessBoard.checkEndConditions(): Boolean {
+fun ChessBoard.isDrawByInsufficientMaterial(): Boolean {
+    // TODO Add logic to determine if either player can't checkmate the other
+    return false // Implement based on actual rules
+}
+
+fun ChessBoard.isDrawByRepetition(): Boolean {
+    // TODO Need to track board states after each move to implement this
     return false
+}
+
+fun ChessBoard.isDrawByFiftyMoveRule(): Boolean {
+    // TODO Implement based on move history and rules
+    return false
+}
+
+/**
+ * Finds the coordinate of the first piece of the specified type and colour.
+ *
+ * @param T The type of the chess piece to find.
+ * @param colour The colour of the piece to find.
+ * @return The coordinate of the found piece, or null if no such piece is found.
+ */
+inline fun <reified T : ChessPiece> ChessBoard.findPieceCoordinate(colour: ChessColour): Coordinate? {
+    return onEachPiece { piece, coordinate ->
+        if (piece is T && piece.colour == colour) coordinate else null
+    }
+}
+
+fun ChessBoard.isUnderAttack(position: Coordinate, colour: ChessColour): Boolean {
+    val opponentColour = if (colour == ChessColour.White) ChessColour.Black else ChessColour.White
+    val opponentMoves = getPiecesByColour(opponentColour).flatMap {
+        it.first.possibleMoves(this, it.second)
+    }
+    return opponentMoves.any { it == position }
+}
+
+fun ChessBoard.updateState() {
+    state = when {
+        isCheckmate(ChessColour.White) || isCheckmate(ChessColour.Black) -> ChessState.Checkmate
+        isStalemate(ChessColour.White) || isStalemate(ChessColour.Black) -> ChessState.Stalemate
+        isCheck(ChessColour.White) || isCheck(ChessColour.Black) -> ChessState.Check
+        isDrawByInsufficientMaterial() -> ChessState.DrawByInsufficientMaterial
+        isDrawByRepetition() -> ChessState.DrawByRepetition
+        isDrawByFiftyMoveRule() -> ChessState.DrawByFiftyMoveRule
+        //
+        else -> ChessState.Ongoing
+    }
+}
+
+fun ChessBoard.getPiecesByColour(chessColour: ChessColour): List<Pair<ChessPiece, Coordinate>> {
+    return collectPieces { piece, _ ->
+        chessColour == piece.colour
+    }
+}
+
+/**
+ * Iterates over all pieces on the board and collects them into a list based on a lambda condition.
+ *
+ * @param action A lambda function that takes the piece and its position and decides whether to include it in the result list.
+ * @return A list of pairs containing the pieces and their coordinates that match the lambda condition.
+ */
+fun ChessBoard.collectPieces(action: (ChessPiece, Coordinate) -> Boolean): List<Pair<ChessPiece, Coordinate>> {
+    val pieces = mutableListOf<Pair<ChessPiece, Coordinate>>()
+    (0 until SIZE).forEach { x ->
+        (0 until SIZE).forEach { y ->
+            this[x, y]?.let { piece ->
+                if (action(piece, Coordinate(x, y))) {
+                    pieces.add(Pair(piece, Coordinate(x, y)))
+                }
+            }
+        }
+    }
+    return pieces
+}
+
+/**
+ * Iterates over all pieces on the board and applies a given lambda function.
+ *
+ * @param action A lambda function that takes the piece and its position and returns a nullable Coordinate.
+ * @return The first nonnull Coordinate returned by the lambda, or null if none are found.
+ */
+fun ChessBoard.onEachPiece(action: (ChessPiece, Coordinate) -> Coordinate?): Coordinate? {
+    (0 until SIZE).forEach { x ->
+        (0 until SIZE).forEach { y ->
+            this[x, y]?.let {
+                val result = action(it, Coordinate(x, y))
+                if (result != null) {
+                    return result
+                }
+            }
+        }
+    }
+    return null
 }
 
 fun ChessBoard.isPathClear(from: Coordinate, to: Coordinate): Boolean {
@@ -162,6 +316,10 @@ fun ChessBoard.isPathClear(from: Coordinate, to: Coordinate): Boolean {
     return true
 }
 
+/**
+ * Generates all possible moves for the bishop and rook chess pieces.
+ * Used in combination for the queen chess piece too.
+ */
 fun ChessBoard.movesForBishopAndRook(
     directions: List<Coordinate>,
     position: Coordinate,
@@ -207,289 +365,4 @@ fun ChessBoard.chessPieceNullOrNotThisColour(
 ): Boolean {
     val destinationPiece = this[toX, toY]
     return destinationPiece == null || destinationPiece.colour != thisPiece.colour
-}
-
-interface Movable {
-    fun isMoveLegal(
-        chessBoard: ChessBoard,
-        from: Coordinate,
-        to: Coordinate
-    ): Boolean
-}
-
-interface Positionable {
-    var hasMoved: Boolean
-
-    fun markAsMoved() {
-        if (hasMoved) return
-        hasMoved = true
-    }
-}
-
-abstract class ChessPiece(
-    val colour: ChessColour,
-    val imgResource: String
-) : Movable, Positionable {
-    override var hasMoved = false
-
-    abstract fun possibleMoves(
-        chessBoard: ChessBoard,
-        position: Coordinate
-    ): List<Coordinate>
-}
-
-class Pawn(
-    colour: ChessColour,
-    direction: Movement.Direction
-) : ChessPiece(
-    colour,
-    if (colour == ChessColour.White) "white_pawn.png" else "black_pawn.png"
-) {
-    private val step = direction.step
-
-    private fun forwardMove(
-        chessBoard: ChessBoard,
-        from: Coordinate,
-        to: Coordinate
-    ) = from.x + step == to.x
-            && from.y == to.y
-            && chessBoard[to.x, to.y] == null
-
-    private fun initialDoubleForwardMove(
-        chessBoard: ChessBoard,
-        from: Coordinate,
-        to: Coordinate,
-    ) = !hasMoved
-            && from.x + 2 * step == to.x
-            && from.y == to.y && chessBoard[to.x, to.y] == null
-            && chessBoard[from.x + step, from.y] == null
-
-    private fun captureMove(
-        chessBoard: ChessBoard,
-        from: Coordinate,
-        to: Coordinate
-    ) = from.x + step == to.x
-            && (from.y + 1 == to.y || from.y - 1 == to.y)
-            && chessBoard[to.x, to.y] != null
-            && chessBoard[to.x, to.y]?.colour != this.colour
-
-    override fun isMoveLegal(
-        chessBoard: ChessBoard,
-        from: Coordinate,
-        to: Coordinate
-    ): Boolean {
-        if (forwardMove(chessBoard, from, to)) {
-            return true
-        }
-
-        if (initialDoubleForwardMove(chessBoard, from, to)) {
-            return true
-        }
-
-        if (captureMove(chessBoard, from, to)) {
-            return true
-        }
-
-        // TODO Add en passant logic
-
-        return false
-    }
-
-    override fun possibleMoves(
-        chessBoard: ChessBoard,
-        position: Coordinate
-    ): List<Coordinate> {
-        val possibleMoves = mutableListOf<Coordinate>()
-        val (x, y) = position
-
-        // TODO When a pawn reaches the opposite side of the board
-        // val promotionRow
-
-        // Standard move
-        if (chessBoard[x + step, y] == null) {
-            possibleMoves.add((Coordinate(x + step, y)))
-            // Double move from start position
-            if (!hasMoved && chessBoard[x + 2 * step, y] == null) {
-                possibleMoves.add(Coordinate(x + 2 * step, y))
-            }
-        }
-
-        // Capturing moves
-        listOf(-1, 1).forEach { dy ->
-            if (y + dy in 0..< SIZE) { // Ensure within board bounds
-                val target = chessBoard[x + step, y + dy]
-                if (target != null && target.colour != this.colour) {
-                    possibleMoves.add(Coordinate(x + step, y + dy))
-                }
-                // Check for en passant conditions here, adding to possibleMoves if valid
-            }
-        }
-
-        // En passant (this is a simplified version; you'll need additional state to check if en passant is applicable)
-        // Suppose enPassantPossibleAt stores the square where en passant is possible
-        // if (enPassantPossibleAt == Pair(x + direction, y + dy)) {
-        //     possibleMoves.add(Pair(x + direction, y + dy))
-        // }
-
-        return possibleMoves
-    }
-}
-
-class Rook(colour: ChessColour) : ChessPiece(
-    colour,
-    if (colour == ChessColour.White) "white_rook.png" else "black_rook.png"
-) {
-    private val directions = listOf(
-        ChessDirection.Up, ChessDirection.Down,
-        ChessDirection.Left, ChessDirection.Right
-    ).map { Coordinate(it.dx, it.dy) }
-
-    override fun isMoveLegal(
-        chessBoard: ChessBoard,
-        from: Coordinate,
-        to: Coordinate
-    ): Boolean {
-        // TODO Castling with king move
-
-        val (dx, dy) = calculateAbsoluteDifferences(from, to)
-        if (!isStraightMovement(dx, dy)) return false
-        return chessBoard.isPathClear(from, to)
-                && chessBoard.chessPieceNullOrNotThisColour(this, to.x, to.y)
-    }
-
-    override fun possibleMoves(chessBoard: ChessBoard, position: Coordinate): List<Coordinate> {
-        // TODO Castling with king move
-
-        return chessBoard.movesForBishopAndRook(directions, position, this)
-    }
-}
-
-class Knight(colour: ChessColour) : ChessPiece(
-    colour,
-    if (colour == ChessColour.White) "white_knight.png" else "black_knight.png"
-) {
-    private val moveOffsets = listOf(
-        Coordinate(2, 1), Coordinate(2, -1),
-        Coordinate(-2, 1), Coordinate(-2, -1),
-        Coordinate(1, 2), Coordinate(1, -2),
-        Coordinate(-1, 2), Coordinate(-1, -2)
-    )
-
-    private fun isLShapedMove(dx: Int, dy: Int) = (dx == 2 && dy == 1) || (dx == 1 && dy == 2)
-
-    override fun isMoveLegal(
-        chessBoard: ChessBoard,
-        from: Coordinate,
-        to: Coordinate
-    ): Boolean {
-        val (dx, dy) = calculateAbsoluteDifferences(from, to)
-        if (!isLShapedMove(dx, dy)) return false
-
-        return chessBoard.chessPieceNullOrNotThisColour(this, to.x, to.y)
-    }
-
-    override fun possibleMoves(chessBoard: ChessBoard, position: Coordinate): List<Coordinate> {
-        return moveOffsets.map { offset ->
-            Coordinate(position.x + offset.x, position.y + offset.y)
-        }.filter { move ->
-            move.x in 0 until SIZE && move.y in 0 until SIZE
-                    && chessBoard.chessPieceNullOrNotThisColour(this, move.x, move.y)
-        }
-    }
-}
-
-class Bishop(colour: ChessColour) : ChessPiece(
-    colour,
-    if (colour == ChessColour.White) "white_bishop.png" else "black_bishop.png"
-) {
-    private val directions = listOf(
-        ChessDirection.TopRight,
-        ChessDirection.TopLeft,
-        ChessDirection.BottomRight,
-        ChessDirection.BottomLeft
-    ).map { Coordinate(it.dx, it.dy) }
-
-    override fun isMoveLegal(
-        chessBoard: ChessBoard,
-        from: Coordinate,
-        to: Coordinate
-    ): Boolean {
-        val (dx, dy) = calculateAbsoluteDifferences(from, to)
-        if (!isDiagonalMovement(dx, dy)) return false
-
-        return chessBoard.isPathClear(from, to)
-                && chessBoard.chessPieceNullOrNotThisColour(this, to.x, to.y)
-    }
-
-    override fun possibleMoves(chessBoard: ChessBoard, position: Coordinate): List<Coordinate> =
-        chessBoard.movesForBishopAndRook(directions, position, this)
-}
-
-class Queen(colour: ChessColour) : ChessPiece(
-    colour,
-    if (colour == ChessColour.White) "white_queen.png" else "black_queen.png"
-) {
-    private val directions = listOf(
-        ChessDirection.Up, ChessDirection.Down, ChessDirection.Left, ChessDirection.Right,
-        ChessDirection.TopRight, ChessDirection.TopLeft, ChessDirection.BottomRight, ChessDirection.BottomLeft
-    ).map { Coordinate(it.dx, it.dy) }
-
-    override fun isMoveLegal(
-        chessBoard: ChessBoard,
-        from: Coordinate,
-        to: Coordinate
-    ): Boolean {
-        val (dx, dy) = calculateAbsoluteDifferences(from, to)
-        if (!(isStraightMovement(dx, dy) || isDiagonalMovement(dx, dy))) return false
-
-        return chessBoard.isPathClear(from, to)
-                && chessBoard.chessPieceNullOrNotThisColour(this, to.x, to.y)
-    }
-
-    override fun possibleMoves(chessBoard: ChessBoard, position: Coordinate): List<Coordinate> =
-        chessBoard.movesForBishopAndRook(directions, position, this)
-}
-
-class King(colour: ChessColour) : ChessPiece(
-    colour,
-    if (colour == ChessColour.White) "white_king.png" else "black_king.png"
-) {
-    // Check for one square movement in any direction
-    private fun isOneSquareAnyDirection(dx: Int, dy: Int) = dx > 1 || dy > 1
-
-    override fun isMoveLegal(
-        chessBoard: ChessBoard,
-        from: Coordinate,
-        to: Coordinate
-    ): Boolean {
-        val (dx, dy) = calculateAbsoluteDifferences(from, to)
-        if (isOneSquareAnyDirection(dx, dy)) return false
-
-        // TODO Check for castling conditions here
-
-        return chessBoard.chessPieceNullOrNotThisColour(this, to.x, to.y)
-    }
-
-    override fun possibleMoves(chessBoard: ChessBoard, position: Coordinate): List<Coordinate> {
-        val possibleMoves = mutableListOf<Coordinate>()
-
-        // Generate moves one square around the king
-        for (dx in -1..1) {
-            for (dy in -1..1) {
-                if (dx == 0 && dy == 0) continue // Skip the square where the king currently is
-
-                val newX = position.x + dx
-                val newY = position.y + dy
-
-                if (newX in 0 until SIZE && newY in 0 until SIZE &&
-                    chessBoard.chessPieceNullOrNotThisColour(this, newX, newY)) {
-                    possibleMoves.add(Coordinate(newX, newY))
-                }
-            }
-        }
-
-        // TODO Add castling moves
-
-        return possibleMoves
-    }
 }
