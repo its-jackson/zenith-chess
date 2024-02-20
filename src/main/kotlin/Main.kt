@@ -15,7 +15,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
-import api.ChessColour
+import api.ChessBoardTestSetups.getNewEnPassantTestBoardInstance
 import api.GameDetails
 import composables.ChessBoard
 import composables.ConsoleOverlay
@@ -91,10 +91,11 @@ private fun openConsoleTrigger(
 fun main() = application {
     val consoleViewModel = ConsoleViewModel()
     val chessBoardViewModel = ChessBoardViewModel()
+    //chessBoardViewModel.chessBoard = getNewEnPassantTestBoardInstance()
 
     Window(
         title = GameDetails.title,
-        //state = WindowState(position = WindowPosition(Alignment.Center)),
+        state = WindowState(position = WindowPosition(Alignment.Center)),
         onCloseRequest = ::exitApplication,
         onPreviewKeyEvent = { keyEvent -> openConsoleTrigger(keyEvent, consoleViewModel) }
     ) {

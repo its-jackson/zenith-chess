@@ -18,9 +18,7 @@ class ChessBoardViewModel {
     val possibleMoves = mutableStateListOf<Coordinate>()
 
     fun selectOrMovePiece(x: Int, y: Int) {
-        if (currentPlayerType == PlayerType.AI) {
-            return
-        }
+        if (currentPlayerType == PlayerType.AI) return
 
         when (selectedSquare) {
             null -> {
@@ -42,14 +40,31 @@ class ChessBoardViewModel {
     }
 
     private fun movePiece(from: Coordinate, to: Coordinate) {
-        if (checkMove(from, to)) {
-            chessBoard[to.x, to.y] = chessBoard[from.x, from.y]
-            chessBoard[to.x, to.y]?.markAsMoved()
-            chessBoard[from.x, from.y] = null
-            chessBoard.turnsPlayed++
-            chessBoard = chessBoard.deepCopy()
-            togglePlayerTurn()
+        val piece = chessBoard[from.x, from.y]
+
+        // Perform en passant capture
+        // The pawn to be captured is on the same rank as the moving pawn's starting square
+        // and on the same file as the moving pawn's destination square
+        if (piece is Pawn && piece.isEnPassantMove(chessBoard, from, to)) {
+            val capturedPawnPosition = Coordinate(from.x, to.y)
+            chessBoard[capturedPawnPosition.x, capturedPawnPosition.y] = null
+            completeMoveSequence(from, to)
+            return
         }
+
+        if (checkMove(from, to)) {
+            completeMoveSequence(from, to)
+        }
+    }
+
+    private fun completeMoveSequence(from: Coordinate, to: Coordinate) {
+        chessBoard.lastMove = LastMove(from, to, chessBoard.isDoublePawnMove(from, to))
+        chessBoard[to.x, to.y] = chessBoard[from.x, from.y]
+        chessBoard[from.x, from.y] = null
+        chessBoard[to.x, to.y]?.markAsMoved()
+        chessBoard.turnsPlayed++
+        chessBoard = chessBoard.deepCopy()
+        togglePlayerTurn()
     }
 
     private fun checkMove(from: Coordinate, to: Coordinate): Boolean {
@@ -65,9 +80,9 @@ class ChessBoardViewModel {
         val aiPieces = chessBoard.getPiecesByColour(chessBoard.aiPlayerColour)
         val legalMoves = mutableListOf<Pair<Coordinate, List<Coordinate>>>()
 
-        aiPieces.forEach { piece ->
-            val from = piece.second
-            val moves = piece.first.possibleMoves(chessBoard, from)
+        aiPieces.forEach { pair ->
+            val from = pair.second
+            val moves = pair.first.possibleMoves(chessBoard, from)
             if (moves.isNotEmpty()) {
                 legalMoves.add(Pair(from, moves))
             }
