@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "org.nexus.studios"
-version = "0.0.3-pre"
+version = "0.0.4-pre"
 
 repositories {
     mavenCentral()

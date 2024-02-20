@@ -5,6 +5,8 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import api.*
+import api.StandardChessBoardLayout.BACK_ROW_BLACK
+import api.StandardChessBoardLayout.BACK_ROW_WHITE
 
 enum class PlayerType {
     AI, Human
@@ -41,15 +43,25 @@ class ChessBoardViewModel {
 
     private fun movePiece(from: Coordinate, to: Coordinate) {
         val piece = chessBoard[from.x, from.y]
+        if (piece != null && piece is Pawn) {
+            // Perform en passant capture
+            // The pawn to be captured is on the same rank as the moving pawn's starting square
+            // and on the same file as the moving pawn's destination square
+            if (piece.isEnPassantMove(chessBoard, from, to)) {
+                val capturedPawnPosition = Coordinate(from.x, to.y)
+                chessBoard[capturedPawnPosition.x, capturedPawnPosition.y] = null
+                completeMoveSequence(from, to)
+                return
+            }
 
-        // Perform en passant capture
-        // The pawn to be captured is on the same rank as the moving pawn's starting square
-        // and on the same file as the moving pawn's destination square
-        if (piece is Pawn && piece.isEnPassantMove(chessBoard, from, to)) {
-            val capturedPawnPosition = Coordinate(from.x, to.y)
-            chessBoard[capturedPawnPosition.x, capturedPawnPosition.y] = null
-            completeMoveSequence(from, to)
-            return
+            // Perform pawn promotion
+            // When a pawn reaches the opposite sides back row
+            // automatically change the piece to be a new queen with the same piece colour from before
+            if (checkMove(from, to) && (to.x == BACK_ROW_WHITE) || to.x == BACK_ROW_BLACK) {
+                chessBoard[from.x, from.y] = Queen(piece.colour) // Maybe allow customization later?
+                completeMoveSequence(from, to)
+                return
+            }
         }
 
         if (checkMove(from, to)) {
@@ -63,6 +75,7 @@ class ChessBoardViewModel {
         chessBoard[from.x, from.y] = null
         chessBoard[to.x, to.y]?.markAsMoved()
         chessBoard.turnsPlayed++
+        chessBoard.updateState()
         chessBoard = chessBoard.deepCopy()
         togglePlayerTurn()
     }

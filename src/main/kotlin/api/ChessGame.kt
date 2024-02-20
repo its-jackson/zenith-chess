@@ -92,7 +92,9 @@ class ChessBoard(
     var lastMove: LastMove? = null,
     private val board: Array<Array<ChessPiece?>> = Array(MAX_SIZE) { Array(MAX_SIZE) { null } }
 ) {
-    val aiPlayerColour get() = humanPlayerColour.opposite()
+    val aiPlayerColour
+        get() =
+            humanPlayerColour.opposite()
 
     init {
         setup()
@@ -110,12 +112,12 @@ class ChessBoard(
 
     private fun setup() {
         when (humanPlayerColour) {
-            ChessColour.White -> setupAsWhiteSide()
-            else -> setupAsBlackSide()
+            ChessColour.White -> setupAsStandardWhiteSide()
+            else -> setupAsStandardBlackSide()
         }
     }
 
-    private fun setupAsWhiteSide() {
+    private fun setupAsStandardWhiteSide() {
         (MIN_SIZE until MAX_SIZE).forEach { i ->
             this[PAWN_ROW_WHITE, i] = Pawn(ChessColour.White, Movement.Direction.Down)
             this[PAWN_ROW_BLACK, i] = Pawn(ChessColour.Black, Movement.Direction.Up)
@@ -143,7 +145,7 @@ class ChessBoard(
         this[BACK_ROW_BLACK, KING_POSITION] = King(ChessColour.Black)
     }
 
-    private fun setupAsBlackSide() {
+    private fun setupAsStandardBlackSide() {
         (MIN_SIZE until MAX_SIZE).forEach { i ->
             this[PAWN_ROW_BLACK, i] = Pawn(ChessColour.White, Movement.Direction.Up)
             this[PAWN_ROW_WHITE, i] = Pawn(ChessColour.Black, Movement.Direction.Down)
@@ -255,7 +257,7 @@ fun ChessBoard.isStalemate(colour: ChessColour): Boolean {
 
 fun ChessBoard.isDrawByInsufficientMaterial(): Boolean {
     // TODO Add logic to determine if either player can't checkmate the other
-    return false // Implement based on actual rules
+    return false
 }
 
 fun ChessBoard.isDrawByRepetition(): Boolean {
@@ -269,12 +271,12 @@ fun ChessBoard.isDrawByFiftyMoveRule(): Boolean {
 }
 
 fun ChessBoard.isDrawByAgreement(): Boolean {
-    // TODO
+    // TODO Implement based on when the AI and Human decide to both draw together
     return false
 }
 
 fun ChessBoard.isResignation(): Boolean {
-    // TODO
+    // TODO Implement based on when the user clicks on end, in the in-game menu composable
     return false
 }
 
