@@ -2,7 +2,6 @@ package composables
 
 import api.ChessPiece
 import api.Coordinate
-import api.SIZE
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -15,7 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -26,6 +24,8 @@ import androidx.compose.ui.res.loadImageBitmap
 import androidx.compose.ui.res.useResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import api.StandardChessBoardLayout.MAX_SIZE
+import api.StandardChessBoardLayout.MIN_SIZE
 import models.ChessBoardViewModel
 import models.ConsoleViewModel
 
@@ -118,13 +118,13 @@ fun ChessBoard(
     consoleViewModel: ConsoleViewModel,
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val squareWidth = maxWidth / SIZE
-        val squareHeight = maxHeight / SIZE
+        val squareWidth = maxWidth / MAX_SIZE
+        val squareHeight = maxHeight / MAX_SIZE
 
         Column {
-            (0 until SIZE).forEach { rowIndex ->
+            (MIN_SIZE until MAX_SIZE).forEach { rowIndex ->
                 Row {
-                    (0 until SIZE).forEach { columnIndex ->
+                    (MIN_SIZE until MAX_SIZE).forEach { columnIndex ->
                         ChessSquare(
                             consoleViewModel = consoleViewModel,
                             chessBoardViewModel = chessBoardViewModel,

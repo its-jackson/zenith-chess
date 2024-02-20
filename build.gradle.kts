@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "org.nexus.studios"
-version = "0.0.2-pre"
+version = "0.0.3-pre"
 
 repositories {
     mavenCentral()
@@ -20,6 +20,13 @@ dependencies {
     // (in a separate module for demo project and in testMain).
     // With compose.desktop.common you will also lose @Preview functionality
     implementation(compose.desktop.currentOs)
+
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.0")
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 compose.desktop {

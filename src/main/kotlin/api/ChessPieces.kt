@@ -3,6 +3,9 @@ package api
 import api.Movement.calculateAbsoluteDifferences
 import api.Movement.isDiagonalMovement
 import api.Movement.isStraightMovement
+import api.StandardChessBoardLayout.MAX_SIZE
+import api.StandardChessBoardLayout.MIN_SIZE
+import kotlin.math.abs
 
 interface Movable {
     fun isMoveLegal(
@@ -33,14 +36,84 @@ abstract class ChessPiece(
     ): List<Coordinate>
 }
 
+fun ChessPiece.deepCopy(): ChessPiece {
+    return when (this) {
+        is Pawn -> Pawn(this.colour, this.direction).apply { hasMoved = this@deepCopy.hasMoved }
+        is Rook -> Rook(this.colour).apply { hasMoved = this@deepCopy.hasMoved }
+        is Knight -> Knight(this.colour).apply { hasMoved = this@deepCopy.hasMoved }
+        is Bishop -> Bishop(this.colour).apply { hasMoved = this@deepCopy.hasMoved }
+        is Queen -> Queen(this.colour).apply { hasMoved = this@deepCopy.hasMoved }
+        is King -> King(this.colour).apply { hasMoved = this@deepCopy.hasMoved }
+        else -> throw IllegalArgumentException("Unknown ChessPiece type")
+    }
+}
+
 class Pawn(
     colour: ChessColour,
-    direction: Movement.Direction
+    val direction: Movement.Direction
 ) : ChessPiece(
     colour,
     if (colour == ChessColour.White) "white_pawn.png" else "black_pawn.png"
 ) {
     private val step = direction.step
+
+    override fun isMoveLegal(
+        chessBoard: ChessBoard,
+        from: Coordinate,
+        to: Coordinate
+    ): Boolean {
+        if (forwardMove(chessBoard, from, to)) return true
+        if (initialDoubleForwardMove(chessBoard, from, to)) return true
+        if (captureMove(chessBoard, from, to)) return true
+        if (isEnPassantMove(chessBoard, from, to)) return true
+        return false
+    }
+
+    override fun possibleMoves(chessBoard: ChessBoard, position: Coordinate): List<Coordinate> {
+        val possibleMoves = mutableListOf<Coordinate>()
+        val (x, y) = position
+
+        // TODO When a pawn reaches the opposite side of the board
+
+        // Standard and double move
+        if (chessBoard[x + step, y] == null) {
+            possibleMoves.add((Coordinate(x + step, y)))
+            if (!hasMoved && chessBoard[x + 2 * step, y] == null) possibleMoves.add(Coordinate(x + 2 * step, y))
+        }
+
+        // Capturing moves
+        listOf(
+            Movement.Direction.Down.step,
+            Movement.Direction.Up.step
+        ).forEach { dy ->
+            if (y + dy in MIN_SIZE..< MAX_SIZE) {
+                val target = chessBoard[x + step, y + dy]
+                val coordinate = Coordinate(x + step, y + dy)
+                if (target != null && target.colour != this.colour) possibleMoves.add(coordinate)
+                if (isEnPassantMove(chessBoard, position, coordinate)) possibleMoves.add(coordinate)
+            }
+        }
+
+        return possibleMoves
+    }
+
+    fun isEnPassantMove(
+        chessBoard: ChessBoard,
+        from: Coordinate,
+        to: Coordinate
+    ) = chessBoard.lastMove?.let { lastMove ->
+        val isLastMoveDoublePawnStep = lastMove.isDoublePawnMove &&
+                chessBoard[lastMove.to.x, lastMove.to.y] is Pawn &&
+                abs(lastMove.from.x - lastMove.to.x) == 2
+
+        val isAdjacent = from.x == lastMove.to.x &&
+                abs(from.y - lastMove.to.y) == 1
+
+        val moveToEnPassantSquare = to.x == from.x + step &&
+                to.y == lastMove.to.y
+
+        return isLastMoveDoublePawnStep && isAdjacent && moveToEnPassantSquare
+    } ?: false
 
     private fun forwardMove(
         chessBoard: ChessBoard,
@@ -67,67 +140,6 @@ class Pawn(
             && (from.y + 1 == to.y || from.y - 1 == to.y)
             && chessBoard[to.x, to.y] != null
             && chessBoard[to.x, to.y]?.colour != this.colour
-
-    override fun isMoveLegal(
-        chessBoard: ChessBoard,
-        from: Coordinate,
-        to: Coordinate
-    ): Boolean {
-        if (forwardMove(chessBoard, from, to)) {
-            return true
-        }
-
-        if (initialDoubleForwardMove(chessBoard, from, to)) {
-            return true
-        }
-
-        if (captureMove(chessBoard, from, to)) {
-            return true
-        }
-
-        // TODO Add en passant logic
-
-        return false
-    }
-
-    override fun possibleMoves(
-        chessBoard: ChessBoard,
-        position: Coordinate
-    ): List<Coordinate> {
-        val possibleMoves = mutableListOf<Coordinate>()
-        val (x, y) = position
-
-        // TODO When a pawn reaches the opposite side of the board
-        // val promotionRow
-
-        // Standard move
-        if (chessBoard[x + step, y] == null) {
-            possibleMoves.add((Coordinate(x + step, y)))
-            // Double move from start position
-            if (!hasMoved && chessBoard[x + 2 * step, y] == null) {
-                possibleMoves.add(Coordinate(x + 2 * step, y))
-            }
-        }
-
-        // Capturing moves
-        listOf(-1, 1).forEach { dy ->
-            if (y + dy in 0..<SIZE) { // Ensure within board bounds
-                val target = chessBoard[x + step, y + dy]
-                if (target != null && target.colour != this.colour) {
-                    possibleMoves.add(Coordinate(x + step, y + dy))
-                }
-                // Check for en passant conditions here, adding to possibleMoves if valid
-            }
-        }
-
-        // En passant (this is a simplified version; you'll need additional state to check if en passant is applicable)
-        // Suppose enPassantPossibleAt stores the square where en passant is possible
-        // if (enPassantPossibleAt == Pair(x + direction, y + dy)) {
-        //     possibleMoves.add(Pair(x + direction, y + dy))
-        // }
-
-        return possibleMoves
-    }
 }
 
 class Rook(colour: ChessColour) : ChessPiece(
@@ -187,7 +199,7 @@ class Knight(colour: ChessColour) : ChessPiece(
         return moveOffsets.map { offset ->
             Coordinate(position.x + offset.x, position.y + offset.y)
         }.filter { move ->
-            move.x in 0 until SIZE && move.y in 0 until SIZE
+            move.x in MIN_SIZE until MAX_SIZE && move.y in MIN_SIZE until MAX_SIZE
                     && chessBoard.chessPieceNullOrNotThisColour(this, move.x, move.y)
         }
     }
@@ -198,10 +210,8 @@ class Bishop(colour: ChessColour) : ChessPiece(
     if (colour == ChessColour.White) "white_bishop.png" else "black_bishop.png"
 ) {
     private val directions = listOf(
-        ChessDirection.TopRight,
-        ChessDirection.TopLeft,
-        ChessDirection.BottomRight,
-        ChessDirection.BottomLeft
+        ChessDirection.TopRight, ChessDirection.TopLeft,
+        ChessDirection.BottomRight, ChessDirection.BottomLeft
     ).map { Coordinate(it.dx, it.dy) }
 
     override fun isMoveLegal(
@@ -270,13 +280,13 @@ class King(colour: ChessColour) : ChessPiece(
 
         // Generate moves one square around the king
         for (dx in -1..1) {
-            for (dy in -1..1) {
-                if (dx == 0 && dy == 0) continue // Skip the square where the king currently is
+            for (dy in -1..1) {// Skip the square where the king currently is
+                if (dx == 0 && dy == 0) continue
 
                 val newX = position.x + dx
                 val newY = position.y + dy
 
-                if (newX in 0 until SIZE && newY in 0 until SIZE &&
+                if (newX in MIN_SIZE until MAX_SIZE && newY in MIN_SIZE until MAX_SIZE &&
                     chessBoard.chessPieceNullOrNotThisColour(this, newX, newY)
                 ) {
                     possibleMoves.add(Coordinate(newX, newY))
