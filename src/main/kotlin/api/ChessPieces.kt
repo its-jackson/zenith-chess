@@ -73,8 +73,6 @@ class Pawn(
         val possibleMoves = mutableListOf<Coordinate>()
         val (x, y) = position
 
-        // TODO When a pawn reaches the opposite side of the board
-
         // Standard and double move
         if (chessBoard[x + step, y] == null) {
             possibleMoves.add((Coordinate(x + step, y)))
@@ -157,6 +155,10 @@ class Rook(colour: ChessColour) : ChessPiece(
         to: Coordinate
     ): Boolean {
         // TODO Castling with king move
+
+        // Neither the king nor the chosen rook has previously moved.
+        // There are no pieces between the king and the chosen rook.
+        // The king is not currently in check, does not pass through check, and does not end up in check.
 
         val (dx, dy) = calculateAbsoluteDifferences(from, to)
         if (!isStraightMovement(dx, dy)) return false
@@ -270,6 +272,8 @@ class King(colour: ChessColour) : ChessPiece(
         val (dx, dy) = calculateAbsoluteDifferences(from, to)
         if (isOneSquareAnyDirection(dx, dy)) return false
 
+        // TODO Cannot go to square that would make the king go in check
+
         // TODO Check for castling conditions here
 
         return chessBoard.chessPieceNullOrNotThisColour(this, to.x, to.y)
@@ -280,7 +284,7 @@ class King(colour: ChessColour) : ChessPiece(
 
         // Generate moves one square around the king
         for (dx in -1..1) {
-            for (dy in -1..1) {// Skip the square where the king currently is
+            for (dy in -1..1) { // Skip the square where the king currently is
                 if (dx == 0 && dy == 0) continue
 
                 val newX = position.x + dx
@@ -289,6 +293,8 @@ class King(colour: ChessColour) : ChessPiece(
                 if (newX in MIN_SIZE until MAX_SIZE && newY in MIN_SIZE until MAX_SIZE &&
                     chessBoard.chessPieceNullOrNotThisColour(this, newX, newY)
                 ) {
+                    // TODO Cannot go to square that would make the king go in check
+
                     possibleMoves.add(Coordinate(newX, newY))
                 }
             }

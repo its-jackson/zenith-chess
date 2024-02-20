@@ -4,19 +4,19 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4ca83f96-ae3d-435f-b943-93df6023d251" name="Changes" comment="Add chess state functionality and create/update ChessPieces.kt">
-      <change afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/api/ChessBoardTestSetups.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/kotlin/ChessBoardSpecialMoveTest.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="4ca83f96-ae3d-435f-b943-93df6023d251" name="Changes" comment="Clean up lots of magic numbers, added en passant special move.">
+      <change afterPath="$PROJECT_DIR$/src/main/resources/icon2.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/icon2_transparent.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/zenith_chess_icon.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/zenith_chess_icon_transparent.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/Main.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Main.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/api/ChessBoardTestSetups.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/api/ChessBoardTestSetups.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/api/ChessGame.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/api/ChessGame.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/api/ChessPieces.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/api/ChessPieces.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/composables/ChessBoardComposables.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/composables/ChessBoardComposables.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/models/ChessBoardViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/models/ChessBoardViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/kotlin/ChessBoardSpecialMoveTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/ChessBoardSpecialMoveTest.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -71,7 +71,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="fix-pawn-directions" />
+        <entry key="$PROJECT_DIR$" value="chess-state-additions" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -112,7 +112,9 @@
   "keyToString": {
     "Gradle.Build chess-ai.executor": "Run",
     "Gradle.Build zenith-chess.executor": "Run",
+    "Gradle.ChessBoardSpecialMoveTest.executor": "Run",
     "Gradle.ChessBoardSpecialMoveTest.test en passant move is possible.executor": "Run",
+    "Gradle.ChessBoardSpecialMoveTest.test pawn promotion move is possible.executor": "Run",
     "Gradle.ChessBoardTest.executor": "Run",
     "Gradle.ChessBoardTest.test en passant move is possible.executor": "Run",
     "Gradle.Preview: MainKt.App.executor": "Run",
@@ -122,7 +124,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "full.screen.before.presentation.mode": "false",
-    "git-widget-placeholder": "chess-state-additions",
+    "git-widget-placeholder": "en-passant-special-move",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/Users/jacks/Documents/zenith-chess",
@@ -134,6 +136,7 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\jacks\Documents\zenith-chess\src\main\resources" />
       <recent name="C:\Users\jacks\Documents\chess-ai\src\main\kotlin\api" />
       <recent name="C:\Users\jacks\Documents\chess-ai\src\main\kotlin\composables" />
       <recent name="C:\Users\jacks\Documents\chess-ai\src\main\resources" />
@@ -142,7 +145,31 @@
       <recent name="api" />
     </key>
   </component>
-  <component name="RunManager" selected="Gradle.zenith-chess [build]">
+  <component name="RunManager" selected="Kotlin.MainKt">
+    <configuration name="ChessBoardSpecialMoveTest" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value=":test" />
+            <option value="--tests" />
+            <option value="&quot;ChessBoardSpecialMoveTest&quot;" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>true</RunAsTest>
+      <method v="2" />
+    </configuration>
     <configuration name="ChessBoardSpecialMoveTest.test en passant move is possible" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -157,6 +184,30 @@
             <option value=":test" />
             <option value="--tests" />
             <option value="&quot;ChessBoardSpecialMoveTest.test en passant move is possible&quot;" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>true</RunAsTest>
+      <method v="2" />
+    </configuration>
+    <configuration name="ChessBoardSpecialMoveTest.test pawn promotion move is possible" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value=":test" />
+            <option value="--tests" />
+            <option value="&quot;ChessBoardSpecialMoveTest.test pawn promotion move is possible&quot;" />
           </list>
         </option>
         <option name="vmOptions" />
@@ -198,8 +249,10 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Gradle.zenith-chess [build]" />
         <item itemvalue="Kotlin.MainKt" />
+        <item itemvalue="Gradle.zenith-chess [build]" />
+        <item itemvalue="Gradle.ChessBoardSpecialMoveTest" />
+        <item itemvalue="Gradle.ChessBoardSpecialMoveTest.test pawn promotion move is possible" />
         <item itemvalue="Gradle.ChessBoardSpecialMoveTest.test en passant move is possible" />
       </list>
     </recent_temporary>
@@ -245,13 +298,22 @@
       <option name="project" value="LOCAL" />
       <updated>1708300995820</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Clean up lots of magic numbers, added en passant special move.">
+      <option name="closed" value="true" />
+      <created>1708387326252</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1708387326252</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Initial commit" />
     <MESSAGE value="Add gradle task to automate version and name. &#10;&#10;Fix pawn movement." />
     <MESSAGE value="Add chess state functionality and create/update ChessPieces.kt" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add chess state functionality and create/update ChessPieces.kt" />
+    <MESSAGE value="Clean up lots of magic numbers, added en passant special move." />
+    <option name="LAST_COMMIT_MESSAGE" value="Clean up lots of magic numbers, added en passant special move." />
   </component>
 </project>

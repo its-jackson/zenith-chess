@@ -5,7 +5,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Shapes
 import androidx.compose.material.Typography
 import androidx.compose.material.darkColors
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
@@ -15,14 +15,13 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
-import api.ChessBoardTestSetups.getNewEnPassantTestBoardInstance
 import api.GameDetails
 import composables.ChessBoard
 import composables.ConsoleOverlay
 import models.ChessBoardViewModel
 import models.ConsoleViewModel
 
-private val CustomColors = darkColors(
+private val ChessColors = darkColors(
     primary = Color.Black,
     primaryVariant = Color.DarkGray,
     onPrimary = Color.White,
@@ -34,24 +33,24 @@ private val CustomColors = darkColors(
     onBackground = Color.White
 )
 
-private val CustomTypography = Typography(
+private val ChessTypography = Typography(
     button = TextStyle(
         color = Color.White
     )
 )
 
-private val CustomShapes = Shapes(
+private val ChessShapes = Shapes(
     small = RoundedCornerShape(4.dp),
     medium = RoundedCornerShape(4.dp),
     large = RoundedCornerShape(0.dp)
 )
 
 @Composable
-fun CustomMaterialTheme(content: @Composable () -> Unit) {
+fun ChessMaterialTheme(content: @Composable () -> Unit) {
     MaterialTheme(
-        colors = CustomColors,
-        typography = CustomTypography,
-        shapes = CustomShapes,
+        colors = ChessColors,
+        typography = ChessTypography,
+        shapes = ChessShapes,
         content = content
     )
 }
@@ -62,7 +61,7 @@ fun App(
     chessBoardViewModel: ChessBoardViewModel,
     consoleViewModel: ConsoleViewModel
 ) {
-    CustomMaterialTheme {
+    ChessMaterialTheme {
         Box {
             ChessBoard(
                 chessBoardViewModel = chessBoardViewModel,
@@ -91,7 +90,6 @@ private fun openConsoleTrigger(
 fun main() = application {
     val consoleViewModel = ConsoleViewModel()
     val chessBoardViewModel = ChessBoardViewModel()
-    //chessBoardViewModel.chessBoard = getNewEnPassantTestBoardInstance()
 
     Window(
         title = GameDetails.title,
