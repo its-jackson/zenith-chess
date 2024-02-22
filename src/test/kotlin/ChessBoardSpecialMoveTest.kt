@@ -2,6 +2,7 @@ import api.ChessBoard
 import api.ChessBoardTestSetups.enPassantDirection
 import api.ChessBoardTestSetups.enPassantBlackPawnLastMove
 import api.ChessBoardTestSetups.enPassantWhitePawnCoords
+import api.ChessBoardTestSetups.getNewCastlingTestBoardInstance
 import api.ChessBoardTestSetups.getNewEnPassantTestBoardInstance
 import api.ChessBoardTestSetups.getNewPawnPromotionTestBoardInstance
 import api.ChessBoardTestSetups.pawnPromotionDirection
@@ -14,11 +15,13 @@ import org.junit.jupiter.api.Test
 class ChessBoardSpecialMoveTest {
     private lateinit var enPassantBoard: ChessBoard
     private lateinit var promotionBoard: ChessBoard
+    private lateinit var castlingBoard: ChessBoard
 
     @BeforeEach
     fun setup() {
         enPassantBoard = getNewEnPassantTestBoardInstance()
         promotionBoard = getNewPawnPromotionTestBoardInstance()
+        castlingBoard = getNewCastlingTestBoardInstance()
     }
 
     private fun assertMovePossible(
@@ -27,7 +30,8 @@ class ChessBoardSpecialMoveTest {
         expectedMove: Coordinate,
         message: String
     ) {
-        val possibleMoves = board[startCoords.x, startCoords.y]?.possibleMoves(board, startCoords) ?: emptyList()
+        val (startX, startY) = startCoords
+        val possibleMoves = board[startX, startY]?.possibleMoves(board, startCoords) ?: emptyList()
         assertTrue(possibleMoves.contains(expectedMove), message)
     }
 
@@ -54,6 +58,25 @@ class ChessBoardSpecialMoveTest {
             startCoords = whitePawnCoordinate,
             expectedMove = promotionTarget,
             message = "Promotion move should be possible."
+        )
+    }
+
+    @Test
+    fun `test castling is possible`() {
+        val kingStart = Coordinate(7, 4)
+        val kingEnd = Coordinate(7, 6)
+        val queenEnd = Coordinate(7, 2)
+
+        val king = castlingBoard[kingStart.x, kingStart.y]
+
+        assertTrue(
+            king?.isMoveLegal(castlingBoard, kingStart, kingEnd) == true,
+            "King side castling should be possible."
+        )
+
+        assertTrue(
+            king?.isMoveLegal(castlingBoard, kingStart, queenEnd) == true,
+            "Queen side castling should be possible."
         )
     }
 }

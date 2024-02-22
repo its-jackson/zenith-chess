@@ -280,12 +280,27 @@ fun ChessBoard.isResignation(): Boolean {
     return false
 }
 
-fun ChessBoard.isUnderAttack(position: Coordinate, colour: ChessColour): Boolean {
-    val enemyColour = colour.opposite()
-    val enemyMoves = getPiecesByColour(enemyColour).flatMap {
-        it.first.possibleMoves(this, it.second)
+fun ChessBoard.isUnderAttack(target: Coordinate, colour: ChessColour): Boolean {
+    val enemyPieces = getPiecesByColour(colour.opposite())
+    for ((enemyPiece, enemyPosition) in enemyPieces) {
+        if (enemyPiece.canAttack(this, enemyPosition, target))
+            return true
     }
-    return enemyMoves.any { it == position }
+    return false
+}
+
+fun ChessBoard.doesMoveLeadToCheck(
+    from: Coordinate,
+    to: Coordinate,
+    colour: ChessColour
+): Boolean {
+    val tempBoard = this.deepCopy()
+
+    tempBoard[to.x, to.y] = tempBoard[from.x, from.y]
+    tempBoard[from.x, from.y] = null
+    tempBoard[to.x, to.y]?.markAsMoved()
+
+    return tempBoard.isUnderAttack(Coordinate(to.x, to.y), colour)
 }
 
 fun ChessBoard.updateState() {

@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import api.*
+import api.Movement.getMovementStep
 import api.StandardChessBoardLayout.BACK_ROW_BLACK
 import api.StandardChessBoardLayout.BACK_ROW_WHITE
 
@@ -42,8 +43,9 @@ class ChessBoardViewModel {
     }
 
     private fun movePiece(from: Coordinate, to: Coordinate) {
-        val piece = chessBoard[from.x, from.y]
-        if (piece != null && piece is Pawn) {
+        val piece = chessBoard[from.x, from.y] ?: return
+
+        if (piece is Pawn) {
             // Perform en passant capture
             // The pawn to be captured is on the same rank as the moving pawn's starting square
             // and on the same file as the moving pawn's destination square
@@ -64,9 +66,45 @@ class ChessBoardViewModel {
             }
         }
 
+        // Check for castling by horizontal move of 2 squares
+        if (piece is King && checkMove(from, to)) {
+            // Determine direction of castling (y-axis)
+            val direction = getMovementStep(from, to).second
+            // Rook's original position (right for king side, left for queen side)
+            val rookFromY = if (direction > 0) 7 else 0
+            // Rook's new position next to the king
+            val rookToY = if (direction > 0) to.y - 1 else to.y + 1
+
+            // Move the king
+            chessBoard[to.x, to.y] = piece
+            chessBoard[from.x, from.y] = null
+            piece.markAsMoved()
+
+            // Move the rook
+            val rook = chessBoard[from.x, rookFromY]
+            chessBoard[from.x, rookToY] = rook
+            chessBoard[from.x, rookFromY] = null
+            rook?.markAsMoved()
+
+            chessBoard.lastMove = LastMove(from, to, false)
+            updateChessBoard()
+            return
+        }
+
         if (checkMove(from, to)) {
             completeMoveSequence(from, to)
         }
+    }
+
+    private fun togglePlayerTurn() {
+        currentPlayerType = if (currentPlayerType == PlayerType.Human) PlayerType.AI else PlayerType.Human
+    }
+
+    private fun updateChessBoard() {
+        chessBoard.turnsPlayed++
+        chessBoard.updateState()
+        chessBoard = chessBoard.deepCopy()
+        togglePlayerTurn()
     }
 
     private fun completeMoveSequence(from: Coordinate, to: Coordinate) {
@@ -74,19 +112,12 @@ class ChessBoardViewModel {
         chessBoard[to.x, to.y] = chessBoard[from.x, from.y]
         chessBoard[from.x, from.y] = null
         chessBoard[to.x, to.y]?.markAsMoved()
-        chessBoard.turnsPlayed++
-        chessBoard.updateState()
-        chessBoard = chessBoard.deepCopy()
-        togglePlayerTurn()
+        updateChessBoard()
     }
 
     private fun checkMove(from: Coordinate, to: Coordinate): Boolean {
         val piece = chessBoard[from.x, from.y] ?: return false
         return piece.isMoveLegal(chessBoard, from, to)
-    }
-
-    private fun togglePlayerTurn() {
-        currentPlayerType = if (currentPlayerType == PlayerType.Human) PlayerType.AI else PlayerType.Human
     }
 
     private fun performRandomAIMove() {
