@@ -4,14 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4ca83f96-ae3d-435f-b943-93df6023d251" name="Changes" comment="Added pawn promotion logic with junit tests that have passed fully for validation.">
+    <list default="true" id="4ca83f96-ae3d-435f-b943-93df6023d251" name="Changes" comment="Key Changes:&#10;&#10;Added functionality to handle castling moves for the king, including updating the positions of the king and the relevant rook on the board.&#10;Introduced an Attackable interface to streamline the attack checks for different pieces, enhancing the clarity and efficiency of the code, especially for determining legal moves and check conditions.&#10;Refactored the ChessBoard and piece classes to utilize the Attackable interface, reducing unnecessary recursion and preventing stack overflow errors previously encountered in deep recursion scenarios.&#10;Updated unit tests to cover the new castling functionality, ensuring that all possible castling moves are correctly identified and executed on the board. Adjusted existing tests to align with the refactored code structure.&#10;&#10;Bug Fixes:&#10;&#10;Resolved a stack overflow error by eliminating deep recursion in the check/checkmate logic, which was caused by repeated checks for legal moves and attack possibilities.&#10;Fixed incorrect calculation of legal moves that previously allowed illegal moves in certain scenarios, particularly related to the king's movements and the enforcement of check conditions.&#10;&#10;Tests:&#10;&#10;All unit tests related to castling, pawn promotion, en passant, and standard piece movements have passed successfully.&#10;Comprehensive testing was conducted to ensure no regression in the game's logic and that all special moves are executed according to chess rules.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/api/ChessBoardTestSetups.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/api/ChessBoardTestSetups.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/api/ChessGame.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/api/ChessGame.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/api/ChessPieces.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/api/ChessPieces.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/models/ChessBoardViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/models/ChessBoardViewModel.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/kotlin/ChessBoardSpecialMoveTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/ChessBoardSpecialMoveTest.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -66,7 +62,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="en-passant-special-move" />
+        <entry key="$PROJECT_DIR$" value="pawn-promotion-added" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -103,32 +99,32 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Gradle.Build chess-ai.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Build zenith-chess.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.ChessBoardSpecialMoveTest.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.ChessBoardSpecialMoveTest.test en passant move is possible.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.ChessBoardSpecialMoveTest.test pawn promotion move is possible.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.ChessBoardTest.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.ChessBoardTest.test en passant move is possible.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Preview: MainKt.App.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.zenith-chess [build].executor&quot;: &quot;Run&quot;,
-    &quot;Kotlin.MainKt.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;full.screen.before.presentation.mode&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;pawn-promotion-added&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/jacks/Documents/zenith-chess&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.55172414&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settingsdialog.project.gradle&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Gradle.Build chess-ai.executor": "Run",
+    "Gradle.Build zenith-chess.executor": "Run",
+    "Gradle.ChessBoardSpecialMoveTest.executor": "Run",
+    "Gradle.ChessBoardSpecialMoveTest.test en passant move is possible.executor": "Run",
+    "Gradle.ChessBoardSpecialMoveTest.test pawn promotion move is possible.executor": "Run",
+    "Gradle.ChessBoardTest.executor": "Run",
+    "Gradle.ChessBoardTest.test en passant move is possible.executor": "Run",
+    "Gradle.Preview: MainKt.App.executor": "Run",
+    "Gradle.zenith-chess [build].executor": "Run",
+    "Kotlin.MainKt.executor": "Run",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "full.screen.before.presentation.mode": "false",
+    "git-widget-placeholder": "castling-special-move-added",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/jacks/Documents/zenith-chess",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.55172414",
+    "settings.editor.selected.configurable": "reference.settingsdialog.project.gradle"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\jacks\Documents\zenith-chess\src\main\resources" />
@@ -140,7 +136,7 @@
       <recent name="api" />
     </key>
   </component>
-  <component name="RunManager" selected="Gradle.zenith-chess [build]">
+  <component name="RunManager" selected="Kotlin.MainKt">
     <configuration name="ChessBoardSpecialMoveTest" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -244,9 +240,9 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Kotlin.MainKt" />
         <item itemvalue="Gradle.zenith-chess [build]" />
         <item itemvalue="Gradle.ChessBoardSpecialMoveTest" />
-        <item itemvalue="Kotlin.MainKt" />
         <item itemvalue="Gradle.ChessBoardSpecialMoveTest.test pawn promotion move is possible" />
         <item itemvalue="Gradle.ChessBoardSpecialMoveTest.test en passant move is possible" />
       </list>
@@ -309,7 +305,15 @@
       <option name="project" value="LOCAL" />
       <updated>1708449432453</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Key Changes:&#10;&#10;Added functionality to handle castling moves for the king, including updating the positions of the king and the relevant rook on the board.&#10;Introduced an Attackable interface to streamline the attack checks for different pieces, enhancing the clarity and efficiency of the code, especially for determining legal moves and check conditions.&#10;Refactored the ChessBoard and piece classes to utilize the Attackable interface, reducing unnecessary recursion and preventing stack overflow errors previously encountered in deep recursion scenarios.&#10;Updated unit tests to cover the new castling functionality, ensuring that all possible castling moves are correctly identified and executed on the board. Adjusted existing tests to align with the refactored code structure.&#10;&#10;Bug Fixes:&#10;&#10;Resolved a stack overflow error by eliminating deep recursion in the check/checkmate logic, which was caused by repeated checks for legal moves and attack possibilities.&#10;Fixed incorrect calculation of legal moves that previously allowed illegal moves in certain scenarios, particularly related to the king's movements and the enforcement of check conditions.&#10;&#10;Tests:&#10;&#10;All unit tests related to castling, pawn promotion, en passant, and standard piece movements have passed successfully.&#10;Comprehensive testing was conducted to ensure no regression in the game's logic and that all special moves are executed according to chess rules.">
+      <option name="closed" value="true" />
+      <created>1708564563762</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1708564563762</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -318,6 +322,7 @@
     <MESSAGE value="Add chess state functionality and create/update ChessPieces.kt" />
     <MESSAGE value="Clean up lots of magic numbers, added en passant special move." />
     <MESSAGE value="Added pawn promotion logic with junit tests that have passed fully for validation." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added pawn promotion logic with junit tests that have passed fully for validation." />
+    <MESSAGE value="Key Changes:&#10;&#10;Added functionality to handle castling moves for the king, including updating the positions of the king and the relevant rook on the board.&#10;Introduced an Attackable interface to streamline the attack checks for different pieces, enhancing the clarity and efficiency of the code, especially for determining legal moves and check conditions.&#10;Refactored the ChessBoard and piece classes to utilize the Attackable interface, reducing unnecessary recursion and preventing stack overflow errors previously encountered in deep recursion scenarios.&#10;Updated unit tests to cover the new castling functionality, ensuring that all possible castling moves are correctly identified and executed on the board. Adjusted existing tests to align with the refactored code structure.&#10;&#10;Bug Fixes:&#10;&#10;Resolved a stack overflow error by eliminating deep recursion in the check/checkmate logic, which was caused by repeated checks for legal moves and attack possibilities.&#10;Fixed incorrect calculation of legal moves that previously allowed illegal moves in certain scenarios, particularly related to the king's movements and the enforcement of check conditions.&#10;&#10;Tests:&#10;&#10;All unit tests related to castling, pawn promotion, en passant, and standard piece movements have passed successfully.&#10;Comprehensive testing was conducted to ensure no regression in the game's logic and that all special moves are executed according to chess rules." />
+    <option name="LAST_COMMIT_MESSAGE" value="Key Changes:&#10;&#10;Added functionality to handle castling moves for the king, including updating the positions of the king and the relevant rook on the board.&#10;Introduced an Attackable interface to streamline the attack checks for different pieces, enhancing the clarity and efficiency of the code, especially for determining legal moves and check conditions.&#10;Refactored the ChessBoard and piece classes to utilize the Attackable interface, reducing unnecessary recursion and preventing stack overflow errors previously encountered in deep recursion scenarios.&#10;Updated unit tests to cover the new castling functionality, ensuring that all possible castling moves are correctly identified and executed on the board. Adjusted existing tests to align with the refactored code structure.&#10;&#10;Bug Fixes:&#10;&#10;Resolved a stack overflow error by eliminating deep recursion in the check/checkmate logic, which was caused by repeated checks for legal moves and attack possibilities.&#10;Fixed incorrect calculation of legal moves that previously allowed illegal moves in certain scenarios, particularly related to the king's movements and the enforcement of check conditions.&#10;&#10;Tests:&#10;&#10;All unit tests related to castling, pawn promotion, en passant, and standard piece movements have passed successfully.&#10;Comprehensive testing was conducted to ensure no regression in the game's logic and that all special moves are executed according to chess rules." />
   </component>
 </project>
