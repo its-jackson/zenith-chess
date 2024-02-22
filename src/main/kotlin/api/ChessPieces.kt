@@ -7,6 +7,14 @@ import api.StandardChessBoardLayout.MAX_SIZE
 import api.StandardChessBoardLayout.MIN_SIZE
 import kotlin.math.abs
 
+interface Attackable {
+    fun canAttack(
+        chessBoard: ChessBoard,
+        from: Coordinate,
+        to: Coordinate
+    ): Boolean
+}
+
 interface Movable {
     fun isMoveLegal(
         chessBoard: ChessBoard,
@@ -27,13 +35,10 @@ interface Positionable {
 abstract class ChessPiece(
     val colour: ChessColour,
     val imgResource: String
-) : Movable, Positionable {
+) : Attackable, Movable, Positionable {
     override var hasMoved = false
 
-    abstract fun possibleMoves(
-        chessBoard: ChessBoard,
-        position: Coordinate
-    ): List<Coordinate>
+    abstract fun possibleMoves(chessBoard: ChessBoard, position: Coordinate): List<Coordinate>
 }
 
 fun ChessPiece.deepCopy(): ChessPiece {
@@ -57,17 +62,19 @@ class Pawn(
 ) {
     private val step = direction.step
 
+    override fun canAttack(
+        chessBoard: ChessBoard,
+        from: Coordinate,
+        to: Coordinate
+    ) = captureMove(chessBoard, from, to) || isEnPassantMove(chessBoard, from, to)
+
     override fun isMoveLegal(
         chessBoard: ChessBoard,
         from: Coordinate,
         to: Coordinate
-    ): Boolean {
-        if (forwardMove(chessBoard, from, to)) return true
-        if (initialDoubleForwardMove(chessBoard, from, to)) return true
-        if (captureMove(chessBoard, from, to)) return true
-        if (isEnPassantMove(chessBoard, from, to)) return true
-        return false
-    }
+    ) = canAttack(chessBoard, from, to)
+            || forwardMove(chessBoard, from, to)
+            || initialDoubleForwardMove(chessBoard, from, to)
 
     override fun possibleMoves(chessBoard: ChessBoard, position: Coordinate): List<Coordinate> {
         val possibleMoves = mutableListOf<Coordinate>()
@@ -149,26 +156,26 @@ class Rook(colour: ChessColour) : ChessPiece(
         ChessDirection.Left, ChessDirection.Right
     ).map { Coordinate(it.dx, it.dy) }
 
+    override fun canAttack(
+        chessBoard: ChessBoard,
+        from: Coordinate,
+        to: Coordinate
+    ): Boolean {
+        val (dx, dy) = calculateAbsoluteDifferences(from, to)
+        return isStraightMovement(dx, dy)
+                && chessBoard.isPathClear(from, to)
+    }
+
     override fun isMoveLegal(
         chessBoard: ChessBoard,
         from: Coordinate,
         to: Coordinate
     ): Boolean {
-        // TODO Castling with king move
-
-        // Neither the king nor the chosen rook has previously moved.
-        // There are no pieces between the king and the chosen rook.
-        // The king is not currently in check, does not pass through check, and does not end up in check.
-
-        val (dx, dy) = calculateAbsoluteDifferences(from, to)
-        if (!isStraightMovement(dx, dy)) return false
-        return chessBoard.isPathClear(from, to)
+        return canAttack(chessBoard, from, to)
                 && chessBoard.chessPieceNullOrNotThisColour(this, to.x, to.y)
     }
 
     override fun possibleMoves(chessBoard: ChessBoard, position: Coordinate): List<Coordinate> {
-        // TODO Castling with king move
-
         return chessBoard.movesForBishopAndRook(directions, position, this)
     }
 }
@@ -186,15 +193,22 @@ class Knight(colour: ChessColour) : ChessPiece(
 
     private fun isLShapedMove(dx: Int, dy: Int) = (dx == 2 && dy == 1) || (dx == 1 && dy == 2)
 
-    override fun isMoveLegal(
+    override fun canAttack(
         chessBoard: ChessBoard,
         from: Coordinate,
         to: Coordinate
     ): Boolean {
         val (dx, dy) = calculateAbsoluteDifferences(from, to)
-        if (!isLShapedMove(dx, dy)) return false
+        return isLShapedMove(dx, dy)
+    }
 
-        return chessBoard.chessPieceNullOrNotThisColour(this, to.x, to.y)
+    override fun isMoveLegal(
+        chessBoard: ChessBoard,
+        from: Coordinate,
+        to: Coordinate
+    ): Boolean {
+        return canAttack(chessBoard, from, to)
+                && chessBoard.chessPieceNullOrNotThisColour(this, to.x, to.y)
     }
 
     override fun possibleMoves(chessBoard: ChessBoard, position: Coordinate): List<Coordinate> {
@@ -216,15 +230,22 @@ class Bishop(colour: ChessColour) : ChessPiece(
         ChessDirection.BottomRight, ChessDirection.BottomLeft
     ).map { Coordinate(it.dx, it.dy) }
 
-    override fun isMoveLegal(
+    override fun canAttack(
         chessBoard: ChessBoard,
         from: Coordinate,
         to: Coordinate
     ): Boolean {
         val (dx, dy) = calculateAbsoluteDifferences(from, to)
-        if (!isDiagonalMovement(dx, dy)) return false
+        return isDiagonalMovement(dx, dy)
+                && chessBoard.isPathClear(from, to)
+    }
 
-        return chessBoard.isPathClear(from, to)
+    override fun isMoveLegal(
+        chessBoard: ChessBoard,
+        from: Coordinate,
+        to: Coordinate
+    ): Boolean {
+        return canAttack(chessBoard, from, to)
                 && chessBoard.chessPieceNullOrNotThisColour(this, to.x, to.y)
     }
 
@@ -241,15 +262,22 @@ class Queen(colour: ChessColour) : ChessPiece(
         ChessDirection.TopRight, ChessDirection.TopLeft, ChessDirection.BottomRight, ChessDirection.BottomLeft
     ).map { Coordinate(it.dx, it.dy) }
 
+    override fun canAttack(
+        chessBoard: ChessBoard,
+        from: Coordinate,
+        to: Coordinate)
+    : Boolean {
+        val (dx, dy) = calculateAbsoluteDifferences(from, to)
+        if (!(isStraightMovement(dx, dy) || isDiagonalMovement(dx, dy))) return false
+        return chessBoard.isPathClear(from, to)
+    }
+
     override fun isMoveLegal(
         chessBoard: ChessBoard,
         from: Coordinate,
         to: Coordinate
     ): Boolean {
-        val (dx, dy) = calculateAbsoluteDifferences(from, to)
-        if (!(isStraightMovement(dx, dy) || isDiagonalMovement(dx, dy))) return false
-
-        return chessBoard.isPathClear(from, to)
+        return canAttack(chessBoard, from, to)
                 && chessBoard.chessPieceNullOrNotThisColour(this, to.x, to.y)
     }
 
@@ -261,8 +289,15 @@ class King(colour: ChessColour) : ChessPiece(
     colour,
     if (colour == ChessColour.White) "white_king.png" else "black_king.png"
 ) {
-    // Check for one square movement in any direction
-    private fun isOneSquareAnyDirection(dx: Int, dy: Int) = dx > 1 || dy > 1
+    override fun canAttack(
+        chessBoard: ChessBoard,
+        from: Coordinate,
+        to: Coordinate
+    ): Boolean {
+        val (dx, dy) = calculateAbsoluteDifferences(from, to)
+        return isStandardMove(dx, dy)
+                && chessBoard.chessPieceNullOrNotThisColour(this, to.x, to.y)
+    }
 
     override fun isMoveLegal(
         chessBoard: ChessBoard,
@@ -270,38 +305,88 @@ class King(colour: ChessColour) : ChessPiece(
         to: Coordinate
     ): Boolean {
         val (dx, dy) = calculateAbsoluteDifferences(from, to)
-        if (isOneSquareAnyDirection(dx, dy)) return false
 
-        // TODO Cannot go to square that would make the king go in check
+        if (canAttack(chessBoard, from, to)
+            && !chessBoard.doesMoveLeadToCheck(from, to, this.colour)) {
+            return true
+        }
 
-        // TODO Check for castling conditions here
+        if (isCastlingMove(dx, dy)) {
+            return canCastle(chessBoard, from, to)
+                    && !chessBoard.doesMoveLeadToCheck(from, to, this.colour)
+        }
 
-        return chessBoard.chessPieceNullOrNotThisColour(this, to.x, to.y)
+        return false
     }
 
     override fun possibleMoves(chessBoard: ChessBoard, position: Coordinate): List<Coordinate> {
         val possibleMoves = mutableListOf<Coordinate>()
 
         // Generate moves one square around the king
-        for (dx in -1..1) {
-            for (dy in -1..1) { // Skip the square where the king currently is
-                if (dx == 0 && dy == 0) continue
+        for (dx in Movement.Direction.Down.step..Movement.Direction.Up.step) {
+            for (dy in Movement.Direction.Down.step..Movement.Direction.Up.step) {
+                // Skip the square where the king currently is
+                if (dx == Movement.Direction.None.step
+                    && dy == Movement.Direction.None.step) continue
 
                 val newX = position.x + dx
                 val newY = position.y + dy
 
                 if (newX in MIN_SIZE until MAX_SIZE && newY in MIN_SIZE until MAX_SIZE &&
-                    chessBoard.chessPieceNullOrNotThisColour(this, newX, newY)
-                ) {
-                    // TODO Cannot go to square that would make the king go in check
-
-                    possibleMoves.add(Coordinate(newX, newY))
+                    chessBoard.chessPieceNullOrNotThisColour(this, newX, newY)) {
+                    val potentialMove = Coordinate(newX, newY)
+                    if (!chessBoard.doesMoveLeadToCheck(position, potentialMove, this.colour)) {
+                        possibleMoves.add(potentialMove)
+                    }
                 }
             }
         }
 
-        // TODO Add castling moves
+        // Add castling moves if applicable and ensure they don't lead the king into check
+        if (!hasMoved && !chessBoard.isCheck(colour)) {
+            if (canCastle(chessBoard, position, Coordinate(position.x, position.y + 2))) {
+                possibleMoves.add(Coordinate(position.x, position.y + 2))
+            }
+            if (canCastle(chessBoard, position, Coordinate(position.x, position.y - 2))) {
+                possibleMoves.add(Coordinate(position.x, position.y - 2))
+            }
+        }
 
         return possibleMoves
+    }
+
+    private fun isStandardMove(dx: Int, dy: Int) = dx <= 1 && dy <= 1
+
+    fun isCastlingMove(dx: Int, dy: Int) = dx == 0 && (dy == 2 || dy == -2)
+
+    fun canCastle(
+        chessBoard: ChessBoard,
+        from: Coordinate,
+        to: Coordinate
+    ): Boolean {
+        if (chessBoard.isCheck(colour)) return false
+
+        // Castling is a horizontal move, so we check the y-axis.
+        val direction = if (to.y > from.y) 1 else -1
+        var currentY = from.y + direction
+
+        // Ensure path is clear between the king and the rook.
+        while (currentY != to.y) {
+            if (chessBoard[from.x, currentY] != null) return false
+            currentY += direction
+        }
+
+        // Check if the king moves through a square that is under attack.
+        for (offset in 1..2) {
+            val checkY = from.y + direction * offset
+            if (chessBoard.isUnderAttack(Coordinate(from.x, checkY), colour)) return false
+        }
+
+        // Determine the rook's initial position for castling.
+        val rookY = if (direction > 0) 7 else 0  // Adjust based on actual board size and rook's position.
+        val rook = chessBoard[from.x, rookY]
+
+        // Verify rook's condition.
+        return rook is Rook && !rook.hasMoved
     }
 }

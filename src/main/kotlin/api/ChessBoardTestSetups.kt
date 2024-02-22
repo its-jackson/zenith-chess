@@ -49,4 +49,18 @@ object ChessBoardTestSetups {
 
         return board
     }
+
+    fun getNewCastlingTestBoardInstance(): ChessBoard {
+        val board = ChessBoard().also { it.clearAllPieces() }
+
+        val whiteKingStartPos = Coordinate(7, 4)
+        val whiteRookKingRightSideStartPos = Coordinate(7, 7)
+        val whiteRookKingLeftSideStartPos = Coordinate(7, 0)
+
+        board[whiteKingStartPos.x, whiteKingStartPos.y] = King(ChessColour.White)
+        board[whiteRookKingRightSideStartPos.x, whiteRookKingRightSideStartPos.y] = Rook(ChessColour.White)
+        board[whiteRookKingLeftSideStartPos.x, whiteRookKingLeftSideStartPos.y] = Rook(ChessColour.White)
+
+        return board
+    }
 }
