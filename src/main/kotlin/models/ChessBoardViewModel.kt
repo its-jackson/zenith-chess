@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import api.*
+import api.Movement.calculateAbsoluteDifferences
 import api.Movement.getMovementStep
 import api.StandardChessBoardLayout.BACK_ROW_BLACK
 import api.StandardChessBoardLayout.BACK_ROW_WHITE
@@ -31,6 +32,7 @@ class ChessBoardViewModel {
                 selectedSquare = Coordinate(x, y)
                 piece.possibleMoves(chessBoard, selectedSquare!!).forEach { possibleMoves.add(it) }
             }
+
             else -> {
                 val selected = selectedSquare!!
                 val destination = Coordinate(x, y)
@@ -67,7 +69,10 @@ class ChessBoardViewModel {
         }
 
         // Check for castling by horizontal move of 2 squares
-        if (piece is King && checkMove(from, to)) {
+        if (piece is King
+            && checkMove(from, to)
+            && calculateAbsoluteDifferences(from, to).let { piece.isCastlingMove(it.first, it.second) }
+        ) {
             // Determine direction of castling (y-axis)
             val direction = getMovementStep(from, to).second
             // Rook's original position (right for king side, left for queen side)

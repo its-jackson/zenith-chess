@@ -359,34 +359,33 @@ class King(colour: ChessColour) : ChessPiece(
 
     fun isCastlingMove(dx: Int, dy: Int) = dx == 0 && (dy == 2 || dy == -2)
 
-    fun canCastle(
+    private fun canCastle(
         chessBoard: ChessBoard,
         from: Coordinate,
         to: Coordinate
     ): Boolean {
         if (chessBoard.isCheck(colour)) return false
 
-        // Castling is a horizontal move, so we check the y-axis.
+        // Castling is a horizontal move, so we check the y-axis
         val direction = if (to.y > from.y) 1 else -1
         var currentY = from.y + direction
 
-        // Ensure path is clear between the king and the rook.
+        // Ensure path is clear between the king and the rook
         while (currentY != to.y) {
             if (chessBoard[from.x, currentY] != null) return false
             currentY += direction
         }
 
-        // Check if the king moves through a square that is under attack.
+        // Check if the king moves through a square that is under attack
         for (offset in 1..2) {
             val checkY = from.y + direction * offset
             if (chessBoard.isUnderAttack(Coordinate(from.x, checkY), colour)) return false
         }
 
-        // Determine the rook's initial position for castling.
-        val rookY = if (direction > 0) 7 else 0  // Adjust based on actual board size and rook's position.
+        // Determine the rook's initial position for castling
+        val rookY = if (direction > 0) 7 else 0
         val rook = chessBoard[from.x, rookY]
 
-        // Verify rook's condition.
         return rook is Rook && !rook.hasMoved
     }
 }
