@@ -9,6 +9,7 @@ import api.Movement.calculateAbsoluteDifferences
 import api.Movement.getMovementStep
 import api.StandardChessBoardLayout.BACK_ROW_BLACK
 import api.StandardChessBoardLayout.BACK_ROW_WHITE
+import kotlin.system.exitProcess
 
 enum class PlayerType {
     AI, Human
@@ -41,6 +42,10 @@ class ChessBoardViewModel {
                 possibleMoves.clear()
                 if (currentPlayerType == PlayerType.AI) performRandomAIMove()
             }
+        }
+
+        if (chessBoard.isGameOver()) {
+            exitProcess(0)
         }
     }
 
@@ -127,19 +132,19 @@ class ChessBoardViewModel {
 
     private fun performRandomAIMove() {
         val aiPieces = chessBoard.getPiecesByColour(chessBoard.aiPlayerColour)
-        val legalMoves = mutableListOf<Pair<Coordinate, List<Coordinate>>>()
+        val legalMoves = mutableListOf<Pair<Coordinate, Sequence<Coordinate>>>()
 
         aiPieces.forEach { pair ->
             val from = pair.second
             val moves = pair.first.possibleMoves(chessBoard, from)
-            if (moves.isNotEmpty()) {
+            if (moves.count() > 0) {
                 legalMoves.add(Pair(from, moves))
             }
         }
 
         if (legalMoves.isNotEmpty()) {
             val (from, moves) = legalMoves.random()
-            val to = moves.random()
+            val to = moves.shuffled().first()
             movePiece(from, to)
         }
     }
