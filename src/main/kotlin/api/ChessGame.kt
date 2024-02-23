@@ -67,6 +67,7 @@ enum class ChessDirection(val dx: Int, val dy: Int) {
     }
 }
 
+// 8x8 Grid (64 pieces is the standard)
 object StandardChessBoardLayout {
     const val MAX_SIZE = 8
     const val MIN_SIZE = 0
@@ -184,9 +185,7 @@ fun ChessBoard.deepCopy(): ChessBoard {
 
     (MIN_SIZE until MAX_SIZE).forEach { x ->
         (MIN_SIZE until MAX_SIZE).forEach { y ->
-            this[x, y].let {
-                copy[x, y] = it?.deepCopy()
-            }
+            this[x, y].let { copy[x, y] = it?.deepCopy() }
         }
     }
 
@@ -295,6 +294,7 @@ fun ChessBoard.couldBeUnderAttack(
     colour: ChessColour
 ): Boolean {
     val tempBoard = deepCopy()
+    tempBoard.lastMove = LastMove(from, to, tempBoard.isDoublePawnMove(from, to))
     tempBoard[to.x, to.y] = tempBoard[from.x, from.y]
     tempBoard[from.x, from.y] = null
     tempBoard[to.x, to.y]?.markAsMoved()
@@ -307,6 +307,7 @@ fun ChessBoard.couldBeInCheck(
     colour: ChessColour
 ): Boolean {
     val tempBoard = deepCopy()
+    tempBoard.lastMove = LastMove(from, to, tempBoard.isDoublePawnMove(from, to))
     tempBoard[to.x, to.y] = tempBoard[from.x, from.y]
     tempBoard[from.x, from.y] = null
     tempBoard[to.x, to.y]?.markAsMoved()
@@ -315,9 +316,9 @@ fun ChessBoard.couldBeInCheck(
 
 fun ChessBoard.updateState() {
     state = when {
+        isCheck(ChessColour.White) || isCheck(ChessColour.Black) -> ChessState.Check
         isCheckmate(ChessColour.White) || isCheckmate(ChessColour.Black) -> ChessState.Checkmate
         isStalemate(ChessColour.White) || isStalemate(ChessColour.Black) -> ChessState.Stalemate
-        isCheck(ChessColour.White) || isCheck(ChessColour.Black) -> ChessState.Check
         isDrawByInsufficientMaterial() -> ChessState.DrawByInsufficientMaterial
         isDrawByRepetition() -> ChessState.DrawByRepetition
         isDrawByFiftyMoveRule() -> ChessState.DrawByFiftyMoveRule
@@ -447,12 +448,11 @@ fun ChessBoard.legalMovesForBishopAndRook(
     .filter { move -> thisPiece.isMoveLegal(this, position, move) }
 
 /**
- * Check if the destination square is either empty or occupied by an opponent's piece
+ * Check if the destination square is either empty (null) or occupied by an enemies piece (colour)
  */
 fun ChessBoard.chessPieceNullOrNotThisColour(
     thisPiece: ChessPiece,
     toX: Int, toY: Int
-): Boolean {
-    val destinationPiece = this[toX, toY]
-    return destinationPiece == null || destinationPiece.colour != thisPiece.colour
+) = this[toX, toY].let { destinationPiece ->
+    destinationPiece == null || destinationPiece.colour != thisPiece.colour
 }
