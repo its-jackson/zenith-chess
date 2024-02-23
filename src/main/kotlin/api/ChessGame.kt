@@ -251,7 +251,7 @@ fun ChessBoard.isStalemate(colour: ChessColour): Boolean {
     val pieces = getPiecesByColour(colour)
     return pieces.all { (piece, position) ->
         val pieceMoves = piece.possibleMoves(this, position)
-        pieceMoves.isEmpty()
+        pieceMoves.count() == 0
     }
 }
 
@@ -289,18 +289,28 @@ fun ChessBoard.isUnderAttack(target: Coordinate, colour: ChessColour): Boolean {
     return false
 }
 
-fun ChessBoard.doesMoveLeadToCheck(
+fun ChessBoard.couldBeUnderAttack(
     from: Coordinate,
     to: Coordinate,
     colour: ChessColour
 ): Boolean {
-    val tempBoard = this.deepCopy()
-
+    val tempBoard = deepCopy()
     tempBoard[to.x, to.y] = tempBoard[from.x, from.y]
     tempBoard[from.x, from.y] = null
     tempBoard[to.x, to.y]?.markAsMoved()
-
     return tempBoard.isUnderAttack(Coordinate(to.x, to.y), colour)
+}
+
+fun ChessBoard.couldBeInCheck(
+    from: Coordinate,
+    to: Coordinate,
+    colour: ChessColour
+): Boolean {
+    val tempBoard = deepCopy()
+    tempBoard[to.x, to.y] = tempBoard[from.x, from.y]
+    tempBoard[from.x, from.y] = null
+    tempBoard[to.x, to.y]?.markAsMoved()
+    return tempBoard.isCheck(colour)
 }
 
 fun ChessBoard.updateState() {
@@ -317,10 +327,8 @@ fun ChessBoard.updateState() {
     }
 }
 
-fun ChessBoard.getPiecesByColour(chessColour: ChessColour): List<Pair<ChessPiece, Coordinate>> {
-    return collectPieces { piece, _ ->
-        chessColour == piece.colour
-    }
+fun ChessBoard.getPiecesByColour(chessColour: ChessColour) = collectPieces { piece, _ ->
+    chessColour == piece.colour
 }
 
 /**
@@ -330,28 +338,24 @@ fun ChessBoard.getPiecesByColour(chessColour: ChessColour): List<Pair<ChessPiece
  * @param colour The colour of the piece to find.
  * @return The coordinate of the found piece, or null if no such piece is found.
  */
-inline fun <reified T : ChessPiece> ChessBoard.findPieceCoordinate(colour: ChessColour): Coordinate? {
-    return onEachPiece { piece, coordinate ->
-        if (piece is T && piece.colour == colour) coordinate else null
-    }
+inline fun <reified T : ChessPiece> ChessBoard.findPieceCoordinate(colour: ChessColour) = onEachPiece { piece, coordinate ->
+    if (piece is T && piece.colour == colour) coordinate else null
 }
 
 /**
- * Iterates over all pieces on the board and collects them into a list based on a lambda condition.
+ * Iterates over all pieces on the board and collects them into a sequence based on a lambda condition.
  *
- * @param action A lambda function that takes the piece and its position and decides whether to include it in the result list.
- * @return A list of pairs containing the pieces and their coordinates that match the lambda condition.
+ * @param action A lambda function that takes the piece and its position and decides whether to include it in the result.
+ * @return A sequence of pairs containing the pieces and their coordinates that match the lambda condition.
  */
-fun ChessBoard.collectPieces(action: (ChessPiece, Coordinate) -> Boolean): List<Pair<ChessPiece, Coordinate>> {
-    val pieces = mutableListOf<Pair<ChessPiece, Coordinate>>()
+fun ChessBoard.collectPieces(action: (ChessPiece, Coordinate) -> Boolean) = sequence {
     (MIN_SIZE until MAX_SIZE).forEach { x ->
         (MIN_SIZE until MAX_SIZE).forEach { y ->
-            this[x, y]?.let { piece ->
-                if (action(piece, Coordinate(x, y))) pieces.add(Pair(piece, Coordinate(x, y)))
+            this@collectPieces[x, y]?.let { piece ->
+                if (action(piece, Coordinate(x, y))) yield(Pair(piece, Coordinate(x, y)))
             }
         }
     }
-    return pieces
 }
 
 /**
@@ -380,6 +384,9 @@ fun ChessBoard.clearAllPieces() {
     }
 }
 
+/**
+ * Checks that in a given direction that there is no obstacle between two chess pieces
+ */
 fun ChessBoard.isPathClear(from: Coordinate, to: Coordinate): Boolean {
     val (xStep, yStep) = getMovementStep(from, to)
 
@@ -391,50 +398,53 @@ fun ChessBoard.isPathClear(from: Coordinate, to: Coordinate): Boolean {
         currentY += yStep
         // Exit if we've reached the target coordinate to avoid checking the destination for a piece
         if (currentX == to.x && currentY == to.y) break
-        if (this[currentX, currentY] != null) return false // Path is blocked
+        if (this[currentX, currentY] != null) return false
     }
 
     return true
 }
 
 /**
- * Generates all possible moves for the bishop and rook chess pieces.
- * Used in combination for the queen chess piece too.
+ * Generates all possible moves for the bishop and rook chess pieces
  */
 fun ChessBoard.movesForBishopAndRook(
-    directions: List<Coordinate>,
+    directions: Sequence<Coordinate>,
     position: Coordinate,
     thisPiece: ChessPiece
-): List<Coordinate> {
-    val possibleMoves = mutableListOf<Coordinate>()
-
+) = sequence {
     directions.forEach { (dx, dy) ->
         var currentX = position.x + dx
         var currentY = position.y + dy
 
-        // Traverse in each direction
-        while (currentX in MIN_SIZE until MAX_SIZE && currentY in MIN_SIZE until MAX_SIZE) {
+        while (
+            currentX in MIN_SIZE until MAX_SIZE
+            && currentY in MIN_SIZE until MAX_SIZE
+        ) {
             val nextPosition = Coordinate(currentX, currentY)
-            val pieceAtNextPosition = this[currentX, currentY]
+            val pieceAtNextPosition = this@movesForBishopAndRook[currentX, currentY]
 
-            // If we encounter a piece
             if (pieceAtNextPosition != null) {
-                // If it's an opponent's piece, it can be captured, so it's a valid move
-                if (pieceAtNextPosition.colour != thisPiece.colour) possibleMoves.add(nextPosition)
-                break // Stop looking further in this direction
+                if (pieceAtNextPosition.colour != thisPiece.colour) yield(nextPosition)
+                break // Stop if a piece is encountered
             } else {
-                // No piece encountered, add as a valid move
-                possibleMoves.add(nextPosition)
+                yield(nextPosition)
             }
 
-            // Increment the coordinates
             currentX += dx
             currentY += dy
         }
     }
-
-    return possibleMoves
 }
+
+/**
+ * Generates all possible legal moves for the bishop and rook chess pieces
+ */
+fun ChessBoard.legalMovesForBishopAndRook(
+    directions: Sequence<Coordinate>,
+    position: Coordinate,
+    thisPiece: ChessPiece
+) = movesForBishopAndRook(directions, position, thisPiece)
+    .filter { move -> thisPiece.isMoveLegal(this, position, move) }
 
 /**
  * Check if the destination square is either empty or occupied by an opponent's piece

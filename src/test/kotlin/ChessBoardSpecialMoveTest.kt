@@ -31,7 +31,7 @@ class ChessBoardSpecialMoveTest {
         message: String
     ) {
         val (startX, startY) = startCoords
-        val possibleMoves = board[startX, startY]?.possibleMoves(board, startCoords) ?: emptyList()
+        val possibleMoves = board[startX, startY]?.possibleMoves(board, startCoords) ?: emptySequence()
         assertTrue(possibleMoves.contains(expectedMove), message)
     }
 

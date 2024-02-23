@@ -10,18 +10,6 @@ object Movement {
         data object None : Direction(0)
     }
 
-    /**
-     * Chebyshev distance
-     *
-     * Measures distance between two points as the maximum difference over any of their axis values.
-     * Which aligns well with how pieces move on a chessboard in many scenarios.
-     *
-     * For pieces like the rook, bishop, and queen, which can move along ranks, files, or diagonals,
-     * the Chebyshev distance gives a straightforward measure of how far apart two squares are along those paths.
-     *
-     * For the king, which moves one square in any direction, the Chebyshev distance directly corresponds
-     * to the minimum number of moves needed to get from one square to another.
-     */
     fun distance(
         fromX: Int, fromY: Int,
         toX: Int, toY: Int
